@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: RoofRight API (run locally with `sam local start-api --env-vars env.json`)
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 60
+    MemorySize: 512
+    CodeUri: .
+    Environment:
+      Variables:
+        AWS_ENDPOINT_URL: http://host.docker.internal:4566
+        CASES_TABLE: roofright-cases
+        FILES_BUCKET: roofright-files
+        OLLAMA_HOST: http://host.docker.internal:11434
+
+Resources:
+  HealthFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.health
+      Events:
+        Api: {Type: Api, Properties: {Path: /health, Method: get}}
+  BillExtractFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.bill_extract
+      Events:
+        Api: {Type: Api, Properties: {Path: /bill/extract, Method: post}}
+        Opt: {Type: Api, Properties: {Path: /bill/extract, Method: options}}
+  SizeFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.size
+      Events:
+        Api: {Type: Api, Properties: {Path: /size, Method: post}}
+        Opt: {Type: Api, Properties: {Path: /size, Method: options}}
+  CreateCaseFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.create_case
+      Events:
+        Api: {Type: Api, Properties: {Path: /cases, Method: post}}
+        Opt: {Type: Api, Properties: {Path: /cases, Method: options}}
+  GetCaseFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.get_case
+      Events:
+        Api: {Type: Api, Properties: {Path: '/cases/{id}', Method: get}}
+  DocumentsFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.documents
+      Events:
+        Api: {Type: Api, Properties: {Path: '/cases/{id}/documents', Method: post}}
+        Opt: {Type: Api, Properties: {Path: '/cases/{id}/documents', Method: options}}
+  FileFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.file_download
+      Events:
+        Api: {Type: Api, Properties: {Path: '/files/{id}/{name}', Method: get}}
+  ChatFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.chat
+      Events:
+        Api: {Type: Api, Properties: {Path: /chat, Method: post}}
+        Opt: {Type: Api, Properties: {Path: /chat, Method: options}}
