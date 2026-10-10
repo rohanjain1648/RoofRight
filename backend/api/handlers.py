@@ -4,6 +4,8 @@ import base64, json
 from engine.sizing import SizingInput, size_system
 from engine.policy import evaluate
 from engine.documents import consent_resolution, vendor_rfq
+from engine.finance import finance_options, lifecycle
+from engine.consent import record_vote, tally
 from . import store
 
 CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"}
@@ -74,6 +76,10 @@ def create_case(event, _ctx=None):
     case["result"] = {k: v for k, v in result.items() if k != "cumulative_series"}
     case["series"] = result["cumulative_series"]
     case["policy"] = evaluate({**case, "system_kwp": result["system_kwp"]}, role=b.get("role", "secretary"))
+    case["role"] = b.get("role", "secretary")
+    case["consent_source"] = "estimate"
+    case["finance"] = finance_options(result, int(case.get("num_houses", 1)))
+    case["lifecycle"] = lifecycle(result)
     return _resp(200, store.save_case(case))
 
 
@@ -118,3 +124,42 @@ def chat(event, _ctx=None):
     if not c:
         return _resp(404, {"error": "case not found"})
     return _resp(200, answer(c, b.get("message", "")))
+
+
+def vote(event, _ctx=None):
+    """A resident records agreement (or not) for their flat; consent and Cedar gates update."""
+    if _preflight(event):
+        return _resp(204, "")
+    cid = (event.get("pathParameters") or {}).get("id", "")
+    c = store.get_case(cid)
+    if not c:
+        return _resp(404, {"error": "case not found"})
+    b = _body(event)
+    if not isinstance(b.get("agree"), bool):
+        return _resp(400, {"error": "agree must be true or false"})
+    try:
+        record_vote(c, str(b.get("flat", "")), b["agree"], role=c.get("role", "secretary"))
+    except ValueError as e:
+        return _resp(400, {"error": str(e)})
+    store.save_case(c)
+    return _resp(200, {"tally": tally(c), "policy": c["policy"], "consent_pct": c["consent_pct"]})
+
+
+def public_case(event, _ctx=None):
+    """What a resident sees on the vote page: no votes list, just the proposal and the tally."""
+    if _preflight(event):
+        return _resp(204, "")
+    c = store.get_case((event.get("pathParameters") or {}).get("id", ""))
+    if not c:
+        return _resp(404, {"error": "case not found"})
+    r = c["result"]
+    fin = c.get("finance") or {}
+    return _resp(200, {
+        "id": c["id"], "society_name": c.get("society_name"), "city": c.get("city"),
+        "system_kwp": r["system_kwp"], "net_cost_inr": r["net_cost_inr"], "subsidy_inr": r["subsidy_inr"],
+        "year1_savings_inr": r["year1_savings_inr"], "payback_years": r["payback_years"],
+        "co2_avoided_tonnes_per_year": r["co2_avoided_tonnes_per_year"],
+        "net_cost_per_flat_inr": fin.get("net_cost_per_flat_inr"),
+        "monthly_saving_per_flat_inr": fin.get("monthly_saving_per_flat_inr"),
+        "tally": tally(c),
+    })

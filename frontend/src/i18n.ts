@@ -1,5 +1,6 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
+import { enExtra, hiExtra } from './i18n-extra'
 
 const en = {
   brand: 'RoofRight',
@@ -178,7 +179,7 @@ const hi: typeof en = {
 const saved = (() => { try { return localStorage.getItem('lang') } catch { return null } })()
 
 i18n.use(initReactI18next).init({
-  resources: { en: { translation: en }, hi: { translation: hi } },
+  resources: { en: { translation: { ...en, ...enExtra } }, hi: { translation: { ...hi, ...hiExtra } } },
   lng: saved === 'hi' ? 'hi' : 'en',
   fallbackLng: 'en',
   interpolation: { escapeValue: false },

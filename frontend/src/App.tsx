@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from './api'
 import type { Case } from './api'
@@ -8,23 +8,66 @@ import RoofStep, { type LatLng } from './components/RoofStep'
 import SocietyStep, { type SocietyValues } from './components/SocietyStep'
 import Results from './components/Results'
 import Pack from './components/Pack'
+import Landing from './components/Landing'
+import VotePage from './components/VotePage'
 
 const STEPS = ['bill', 'roof', 'society', 'results', 'pack'] as const
 const EMPTY_BILL: BillValues = { units: '', tariff: '', load: '' }
 const EMPTY_SOC: SocietyValues = { name: '', houses: '40', consent: '60', roofRight: 'society_common', structural: false, role: 'secretary' }
 
+type Route = { name: 'home' } | { name: 'app' } | { name: 'vote'; id: string }
+
+function parseRoute(hash: string): Route {
+  const vote = hash.match(/^#\/vote\/([A-Za-z0-9]+)$/)
+  if (vote) return { name: 'vote', id: vote[1] }
+  if (hash.startsWith('#/app')) return { name: 'app' }
+  return { name: 'home' }
+}
+
+function useRoute() {
+  const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash))
+  useEffect(() => {
+    const on = () => setRoute(parseRoute(window.location.hash))
+    window.addEventListener('hashchange', on)
+    return () => window.removeEventListener('hashchange', on)
+  }, [])
+  return route
+}
+
 function Logo() {
   return (
-    <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="8" fill="var(--ink)" />
-      <circle cx="16" cy="12" r="5" fill="#f2a900" />
-      <path d="M5 26l4-7h14l4 7z" fill="#5b9be0" />
+    <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="8" fill="#0e1f33" />
+      <circle cx="16" cy="11.5" r="5" fill="#f5a400" />
+      <path d="M5 26l4-7h14l4 7z" fill="#5b8de0" />
     </svg>
   )
 }
 
-export default function App() {
+function TopBar({ route }: { route: Route }) {
   const { t, i18n } = useTranslation()
+  const isHi = i18n.language === 'hi'
+  return (
+    <header className="topbar">
+      <div className="topbar-in">
+        <button className="brand" onClick={() => { window.location.hash = '#/' }} aria-label={t('nav.home')}><Logo />{t('brand')}</button>
+        {route.name === 'home' && (
+          <nav className="nav" aria-label="Sections">
+            <a href="#how">{t('nav.how')}</a>
+            <a href="#aws-h">{t('nav.aws')}</a>
+          </nav>
+        )}
+        <div className="topbar-end">
+          <button className="lang-btn" onClick={() => setLang(isHi ? 'en' : 'hi')} lang={isHi ? 'en' : 'hi'}>{t('lang')}</button>
+          {route.name === 'home' && <a className="btn sun hide-sm" href="#/app">{t('nav.start')}</a>}
+        </div>
+      </div>
+    </header>
+  )
+}
+
+function Wizard() {
+  const { t } = useTranslation()
   const [step, setStep] = useState(0)
   const [bill, setBill] = useState<BillValues>(EMPTY_BILL)
   const [low, setLow] = useState<Record<string, boolean>>({})
@@ -56,7 +99,7 @@ export default function App() {
         monthly_units_kwh: num(bill.units), tariff_inr_per_kwh: num(bill.tariff), is_society: true,
         roof_right: soc.roofRight, consent_pct: Math.round(num(soc.consent)), structural_ok: soc.structural, role: soc.role,
       })
-      setKase(c); setStep(3)
+      setKase(c); go(3)
     } catch (e) {
       setError(e instanceof Error ? e.message : t('errors.generic'))
     } finally { setBusy(false) }
@@ -66,17 +109,10 @@ export default function App() {
     setStep(0); setBill(EMPTY_BILL); setLow({}); setMethod(null); setPoints([]); setArea(''); setSoc(EMPTY_SOC); setKase(null); setError(null)
   }
 
-  const go = (n: number) => { setError(null); setStep(n); window.scrollTo({ top: 0 }) }
-  const isHi = i18n.language === 'hi'
+  function go(n: number) { setError(null); setStep(n); window.scrollTo({ top: 0 }) }
 
   return (
-    <div className="shell">
-      <header className="top">
-        <div className="brand"><Logo />{t('brand')}</div>
-        <button className="lang-btn" onClick={() => setLang(isHi ? 'en' : 'hi')} lang={isHi ? 'en' : 'hi'}>{t('lang')}</button>
-      </header>
-      <p className="tagline">{t('tagline')}</p>
-
+    <div className={`shell${step >= 3 ? ' wide' : ''}`}>
       <ol className="stepper" aria-label="Progress">
         {STEPS.map((s, i) => (
           <li key={s} data-state={i < step ? 'done' : i === step ? 'now' : 'todo'} aria-current={i === step ? 'step' : undefined}>
@@ -104,5 +140,18 @@ export default function App() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function App() {
+  const route = useRoute()
+  useEffect(() => { window.scrollTo({ top: 0 }) }, [route.name])
+  return (
+    <>
+      <TopBar route={route} />
+      {route.name === 'home' && <Landing onStart={() => { window.location.hash = '#/app' }} />}
+      {route.name === 'app' && <Wizard />}
+      {route.name === 'vote' && <VotePage id={route.id} />}
+    </>
   )
 }

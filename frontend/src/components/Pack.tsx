@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { API, api } from '../api'
 import type { Case } from '../api'
+import ConsentDrive from './ConsentDrive'
 
 interface Msg { who: 'me' | 'bot'; text: string; meta?: string }
 
@@ -50,7 +51,9 @@ export default function Pack({ c, onRestart }: { c: Case; onRestart: () => void 
         </div>
       ))}
 
-      <div className="section" style={{ marginTop: 26 }}>
+      <ConsentDrive c={c} />
+
+      <div className="section">
         <h2>{t('pack.ask')}</h2>
         <div className="chat-log" aria-live="polite">
           {msgs.map((m, i) => (

@@ -51,11 +51,65 @@ export interface CaseInput {
   role: 'secretary' | 'resident' | 'owner'
 }
 
+export interface FinanceOption {
+  id: 'self' | 'psu' | 'nbfc'
+  label: string
+  rate_pct: number
+  months: number
+  upfront_inr: number
+  emi_inr: number
+  emi_per_flat_inr: number
+  monthly_net_inr: number
+  cash_positive_from_month_one: boolean
+  interest_inr: number
+}
+
+export interface Finance {
+  flats: number
+  net_cost_per_flat_inr: number
+  monthly_saving_inr: number
+  monthly_saving_per_flat_inr: number
+  options: FinanceOption[]
+  assumptions: { loan_on: string; rates_verified: boolean; rates_source: string }
+}
+
+export interface Lifecycle {
+  panels: number
+  panel_mass_kg: number
+  inverter_replacements: number
+  recoverable_mass_kg: number
+  life_years: number
+  co2_avoided_lifetime_tonnes: number
+  vendor_asks: string[]
+  regulation_note: string
+}
+
+export interface Tally { yes: number; no: number; voted: number; houses: number; pct: number; needed_for_majority: number }
+
+export interface PublicCase {
+  id: string
+  society_name: string
+  city: string
+  system_kwp: number
+  net_cost_inr: number
+  subsidy_inr: number
+  year1_savings_inr: number
+  payback_years: number | null
+  co2_avoided_tonnes_per_year: number
+  net_cost_per_flat_inr: number
+  monthly_saving_per_flat_inr: number
+  tally: Tally
+}
+
 export interface Case extends Partial<CaseInput> {
   id: string
   result: Sizing
   series: { year: number; cumulative_inr: number }[]
   policy: Policy
+  finance: Finance
+  lifecycle: Lifecycle
+  consent_source?: 'estimate' | 'votes'
+  consent_tally?: Tally
 }
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
@@ -77,6 +131,10 @@ export const api = {
   size: (b: Partial<CaseInput>) => call<Sizing & { cumulative_series: Case['series'] }>('/size', { method: 'POST', body: JSON.stringify(b) }),
   createCase: (b: CaseInput) => call<Case>('/cases', { method: 'POST', body: JSON.stringify(b) }),
   documents: (id: string) => call<{ files: Record<string, string>; store: string }>(`/cases/${id}/documents`, { method: 'POST', body: '{}' }),
+  vote: (id: string, flat: string, agree: boolean) =>
+    call<{ tally: Tally; policy: Policy; consent_pct: number }>(`/cases/${id}/votes`, { method: 'POST', body: JSON.stringify({ flat, agree }) }),
+  publicCase: (id: string) => call<PublicCase>(`/public/${id}`),
+  getCase: (id: string) => call<Case>(`/cases/${id}`),
   chat: (case_id: string, message: string) =>
     call<{ answer: string; engine: string; tool_calls: string[] }>('/chat', { method: 'POST', body: JSON.stringify({ case_id, message }) }),
 }

@@ -18,6 +18,8 @@ ROUTES = [
     ("POST", r"^/cases/([^/]+)/documents$", h.documents, ["id"]),
     ("GET", r"^/files/([^/]+)/([^/]+)$", h.file_download, ["id", "name"]),
     ("POST", r"^/chat$", h.chat, []),
+    ("POST", r"^/cases/([^/]+)/votes$", h.vote, ["id"]),
+    ("GET", r"^/public/([^/]+)$", h.public_case, ["id"]),
 ]
 
 

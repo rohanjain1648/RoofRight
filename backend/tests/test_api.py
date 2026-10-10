@@ -50,3 +50,23 @@ def test_chat_rule_fallback():
 
 def test_unknown_case_404():
     assert call(h.get_case, id="nope")["statusCode"] == 404
+
+
+def test_finance_lifecycle_on_case():
+    case = json.loads(call(h.create_case, PAYLOAD)["body"])
+    assert case["finance"]["flats"] == 40 and len(case["finance"]["options"]) == 3
+    assert case["lifecycle"]["panels"] > 0
+
+
+def test_vote_endpoint_flips_gate_and_public_view():
+    case = json.loads(call(h.create_case, {**PAYLOAD, "num_houses": 3, "consent_pct": 0})["body"])
+    assert any(b["gate"] == "CheckConsent" for b in case["policy"]["blockers"])
+    for flat in ("A-1", "A-2"):
+        r = call(h.vote, {"flat": flat, "agree": True}, id=case["id"])
+        assert r["statusCode"] == 200
+    out = json.loads(r["body"])
+    assert out["consent_pct"] == 67 and not any(b["gate"] == "CheckConsent" for b in out["policy"]["blockers"])
+    pub = json.loads(call(h.public_case, id=case["id"])["body"])
+    assert pub["tally"]["yes"] == 2 and "votes" not in pub
+    assert call(h.vote, {"flat": "<x>", "agree": True}, id=case["id"])["statusCode"] == 400
+    assert call(h.vote, {"flat": "A-3", "agree": "yes"}, id=case["id"])["statusCode"] == 400

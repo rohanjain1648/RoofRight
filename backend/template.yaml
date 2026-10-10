@@ -69,3 +69,16 @@ Resources:
       Events:
         Api: {Type: Api, Properties: {Path: /chat, Method: post}}
         Opt: {Type: Api, Properties: {Path: /chat, Method: options}}
+  VoteFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.vote
+      Events:
+        Api: {Type: Api, Properties: {Path: '/cases/{id}/votes', Method: post}}
+        Opt: {Type: Api, Properties: {Path: '/cases/{id}/votes', Method: options}}
+  PublicCaseFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.handlers.public_case
+      Events:
+        Api: {Type: Api, Properties: {Path: '/public/{id}', Method: get}}

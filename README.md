@@ -86,6 +86,11 @@ Three choices make it distinct:
 | Document generation | Two print-ready PDFs — a general-body consent resolution and a vendor RFQ — built with reportlab and populated from the case data |
 | Storage | Cases in DynamoDB, PDFs in S3, both via LocalStack; falls back to in-process memory automatically if LocalStack is unreachable |
 | Chat agent | A Strands agent with tools (`get_case_summary`, `check_blockers`, `what_if_size`, `what_if_consent`) answers grounded questions about the case; falls back to a rule-based answerer if the model is unavailable |
+| 3D Roof Studio | The society's building in three.js (react-three-fiber): panels laid out in south-facing rows with shade-safe spacing, a rooftop water tank casting real shadows, and the sun placed for the city, month and hour (declination and hour-angle formulae). A live clear-sky kW readout and a day curve follow the sun |
+| Consent Drive | One shareable link (with a WhatsApp share message in English or Hindi). Residents vote by flat number; consent is recomputed from votes and the Cedar consent gate re-evaluated on every vote. One vote per flat, validated flat ids, voter list never exposed publicly |
+| Per-flat economics and funding | One-time cost per flat, monthly saving per flat, and a side-by-side of society funds vs public-sector bank loan vs NBFC loan (EMI, interest, saving minus EMI) |
+| End-of-life plan | Panel count and mass to recycle after 25 years, recoverable mass, lifetime CO₂, and take-back clauses that are written into the vendor RFQ PDF — the *waste* half of the track |
+| Landing page | White, end-to-end product story with a live 3D building as the hero |
 | Bilingual UI | Every string, including blockers and PDFs' headings, is available in English and Hindi via i18next, with a one-tap toggle persisted locally |
 | Accessibility & responsiveness | Mobile-first layout, visible keyboard focus, `prefers-reduced-motion` respected, dark-mode token set, 48px minimum tap targets |
 
@@ -294,7 +299,7 @@ ollama pull qwen2.5vl:3b      # bill reading (optional; falls back to OCR/manual
 cd backend
 python -m venv .venv && .venv\Scripts\activate      # source .venv/bin/activate on macOS/Linux
 pip install -r requirements.txt
-pytest                                               # 20 tests
+pytest                                               # 28 tests
 sam local start-api --env-vars env.json              # the demo path (needs Docker)
 # or, faster while developing (same handlers, no Docker needed):
 python dev_server.py 3000
@@ -328,16 +333,19 @@ npm run dev                                          # http://localhost:5173
 | `GET` | `/cases/{id}` | Fetch a stored case |
 | `POST` | `/cases/{id}/documents` | Generate both PDFs for a case → `{files}` |
 | `GET` | `/files/{id}/{name}` | Download a generated PDF |
+| `POST` | `/cases/{id}/votes` | `{flat, agree}` → updated tally, consent % and Cedar policy |
+| `GET` | `/public/{id}` | Resident-facing proposal summary and tally (no voter list) |
 | `POST` | `/chat` | `{case_id, message}` → `{answer, engine, tool_calls}` |
 
 ## Testing
 
-`backend/tests` (20 tests, all passing as of the last local run) covers:
+`backend/tests` (28 tests, all passing as of the last local run) covers:
 
 - **`test_sizing.py`** — subsidy slab boundaries (individual and society), roof-limited vs. demand-limited vs. sanctioned-load-limited sizing, and rejection of invalid input.
 - **`test_policy.py`** — all-clear case, a disputed roof blocking the relevant gates and permissions, a non-secretary being denied approval rights, and multiple simultaneous blockers.
 - **`test_documents.py`** — both generated PDFs are valid, non-trivial PDF files.
 - **`test_bill.py`** — the regex bill parser against a realistic sample bill, implausible-value rejection, and that extraction never raises even on garbage input.
+- **`test_finance.py`** — EMI against a known table value, per-flat split and funding-route ordering, end-of-life maths, votes flipping the Cedar consent gate, re-votes replacing earlier votes, and rejection of malformed flat ids and over-voting.
 - **`test_api.py`** — the full case lifecycle (create → fetch → generate documents → download a PDF), blockers surfacing correctly end to end, 400s on bad input, the chat rule-based fallback, and 404 on an unknown case.
 
 The frontend is checked with `tsc -b` (strict TypeScript) and a production `vite build`; both pass cleanly.

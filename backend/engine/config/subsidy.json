@@ -2,8 +2,17 @@
   "_note": "VERIFY every value against https://pmsuryaghar.gov.in before submission. Values below are from memory of the scheme.",
   "source_url": "https://pmsuryaghar.gov.in",
   "retrieved": "UNVERIFIED",
-  "individual": {"per_kw_first_2": 30000, "per_kw_3rd": 18000, "cap": 78000},
-  "rwa_ghs": {"per_kw": 18000, "max_kw_per_house": 3, "max_total_kw": 500, "common_facilities_only": true},
+  "individual": {
+    "per_kw_first_2": 30000,
+    "per_kw_3rd": 18000,
+    "cap": 78000
+  },
+  "rwa_ghs": {
+    "per_kw": 18000,
+    "max_kw_per_house": 3,
+    "max_total_kw": 500,
+    "common_facilities_only": true
+  },
   "cost_per_kwp_inr": 60000,
   "grid_emission_kg_per_kwh": 0.71,
   "tariff_escalation": 0.03,
@@ -11,5 +20,55 @@
   "system_life_years": 25,
   "usable_roof_fraction": 0.6,
   "m2_per_kwp": 10,
-  "yield_kwh_per_kwp_year": {"Delhi": 1400, "Mumbai": 1450, "Bengaluru": 1500, "Chennai": 1500, "Hyderabad": 1500, "Kolkata": 1300, "Jaipur": 1600, "Ahmedabad": 1550, "Pune": 1500, "Chandigarh": 1400, "default": 1450}
+  "yield_kwh_per_kwp_year": {
+    "Delhi": 1400,
+    "Mumbai": 1450,
+    "Bengaluru": 1500,
+    "Chennai": 1500,
+    "Hyderabad": 1500,
+    "Kolkata": 1300,
+    "Jaipur": 1600,
+    "Ahmedabad": 1550,
+    "Pune": 1500,
+    "Chandigarh": 1400,
+    "default": 1450
+  },
+  "finance": {
+    "_note": "Indicative rates from IEEFA's PM Surya Ghar review (PSU banks ~7-8%, NBFCs ~10-14%). VERIFY with lenders before relying on them.",
+    "source": "https://ieefa.org/articles/pmsgy-accelerates-residential-rooftop-solar-yet-supply-and-financing-hurdles-remain",
+    "rates_verified": false,
+    "options": [
+      {
+        "id": "self",
+        "label": "Society funds",
+        "rate_pct": 0,
+        "months": 0
+      },
+      {
+        "id": "psu",
+        "label": "Public-sector bank loan",
+        "rate_pct": 7.5,
+        "months": 60
+      },
+      {
+        "id": "nbfc",
+        "label": "NBFC loan",
+        "rate_pct": 12,
+        "months": 60
+      }
+    ]
+  },
+  "lifecycle": {
+    "_note": "Typical 550 W module ~27 kg. Recoverable fraction is an estimate (glass and aluminium dominate panel mass).",
+    "panel_watt": 550,
+    "panel_kg": 27,
+    "recoverable_fraction": 0.85,
+    "inverter_life_years": 12,
+    "regulation_note": "Solar PV modules are covered by India's E-Waste (Management) Rules, 2022. Confirm current obligations before relying on this.",
+    "vendor_asks": [
+      "Written take-back of panels and inverter at end of life, to a CPCB-registered recycler",
+      "Panel make and model registered under the producer's EPR obligations",
+      "Packaging and damaged-panel disposal during installation handled by the vendor"
+    ]
+  }
 }
