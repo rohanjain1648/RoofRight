@@ -3,7 +3,7 @@
 **From electricity bill to solar application pack, in minutes.**
 A rooftop-solar desk for Indian housing societies, built for the *Waste and Energy* track of Environmental Hacks (Bharat Builds Tour, Event 02) on the AWS open-source stack.
 
-> Demo video: `[YouTube link]` · Blog: `[AWS Builder Center link]`
+> Demo video: [Watch Demo](https://drive.google.com/drive/folders/1F5awi9Ti6GuPMar_llnqNnqHCtbYW16L?usp=sharing) · Blog: [AWS Builder Center Post](https://builder.aws.com/content/3KYlF1sFwlxNSQsXSoBXurr0pXr/the-roof-nobody-owns-building-a-solar-desk-for-indian-housing-societies-with-strands-cedar-sam-and-localstack)
 
 <!-- IMAGE: hero screenshot of the results screen with the roof panel array -->
 

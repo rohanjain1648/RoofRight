@@ -143,7 +143,7 @@ The user here is a volunteer secretary on a phone, often more comfortable in Hin
 ## Try it
 
 - Code: `[GitHub link]`
-- Demo (3 minutes): `[YouTube link]`
+- Demo (3 minutes): [Watch Demo Video](https://drive.google.com/drive/folders/1F5awi9Ti6GuPMar_llnqNnqHCtbYW16L?usp=sharing)
 
 Built with the Strands Agents SDK, Cedar, AWS SAM CLI and LocalStack, with React and TypeScript on the front. Code was written with the help of Claude Code and reviewed and tested by me.
 
